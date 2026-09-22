@@ -72,7 +72,7 @@ def calculate_pagerank(damping, iterations):
         next_scores[page["id"]] = (1 - damping/total_pages
 
         for page in PAGES
-        num_link = lens[pags["link"]]
+        num_link = lens[page["link"]]
             if num_link == 0
                 num_link  = 1
           share_per_link = scores[page["link"]] / num_link
