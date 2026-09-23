@@ -69,7 +69,7 @@ def calculate_pagerank(damping, iterations):
         next_scores = {}
         
         for page in PAGES
-        next_scores[page["id"]] = (1 - damping/total_pages
+        next_scores[page["id"]] = (1 - damping/total_pages)
 
         for page in PAGES
         num_link = lens[page["link"]]
