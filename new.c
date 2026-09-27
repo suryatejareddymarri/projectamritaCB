@@ -149,51 +149,6 @@ void resolveComplaint() {
     printf("Complaint marked as resolved.\n");
 }
 
-/* ---------- 5. check-in / check-out ---------- */
-void checkIn() {
-    int s;
-    s = askStudent();
-    if (s == -1) return;
-    if (students[s].room == 0)           printf("Allocate a room first!\n");
-    else if (students[s].checkedIn == 1) printf("Already checked in!\n");
-    else {
-        students[s].checkedIn = 1;
-        printf("%s checked in to room %d.\n", students[s].name, students[s].room);
-    }
-}
-
-void checkOut() {
-    int s, r;
-    s = askStudent();
-    if (s == -1) return;
-    if (students[s].checkedIn == 0) { printf("Student is not checked in!\n"); return; }
-    r = students[s].room;
-    occupied[r]--;
-    students[s].room = 0;
-    students[s].checkedIn = 0;
-    printf("%s checked out. Room %d is now available.\n", students[s].name, r);
-    if (students[s].paid < FEE) printf("Note: fee balance is still pending!\n");
-}
-
-/* ---------- 6. search and display ---------- */
-void searchStudent() {
-    int s;
-    s = askStudent();
-    if (s == -1) return;
-    printf("\nID: %d\nName: %s\nPhone: %s\n", students[s].id, students[s].name, students[s].phone);
-    printf("Room: %d\nChecked in: %s\n", students[s].room, students[s].checkedIn ? "Yes" : "No");
-    printf("Fee balance: Rs.%d\n", FEE - students[s].paid);
-}
-
-void displayAll() {
-    int i;
-    if (studentCount == 0) { printf("No students registered.\n"); return; }
-    printf("\n%-6s %-20s %-12s %-5s %s\n", "ID", "Name", "Phone", "Room", "Balance");
-    for (i = 0; i < studentCount; i++)
-        printf("%-6d %-20s %-12s %-5d Rs.%d\n", students[i].id, students[i].name,
-               students[i].phone, students[i].room, FEE - students[i].paid);
-}
-
 /* ---------- main menu ---------- */
 int main() {
     int choice;
