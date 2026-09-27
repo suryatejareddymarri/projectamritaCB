@@ -1,0 +1,225 @@
+/* HOSTEL MANAGEMENT SYSTEM - simple version for beginners
+ * Compile:  gcc hostel_simple.c -o hostel
+ * Run:      ./hostel
+ */
+#include <stdio.h>
+
+#define MAX_STUDENTS   50
+#define MAX_COMPLAINTS 50
+#define ROOMS          5
+#define FEE            11000      /* hostel 8000 + mess 3000 */
+
+struct Student {
+    int  id;
+    char name[50];
+    char phone[15];
+    int  room;         /* 0 means no room */
+    int  checkedIn;    /* 0 = no, 1 = yes */
+    int  paid;         /* fee paid so far */
+};
+
+struct Complaint {
+    int  studentId;
+    char text[100];
+    int  resolved;     /* 0 = pending, 1 = resolved */
+};
+
+struct Student   students[MAX_STUDENTS];
+struct Complaint complaints[MAX_COMPLAINTS];
+int studentCount = 0, complaintCount = 0;
+
+/* rooms are numbered 1 to 5, so index 0 is not used */
+int capacity[ROOMS + 1] = {0, 4, 2, 4, 3, 2};
+int occupied[ROOMS + 1] = {0};
+
+/* ---------- helper functions ---------- */
+
+/* returns the position of the student in the array, or -1 if not found */
+int findStudent(int id) {
+    int i;
+    for (i = 0; i < studentCount; i++)
+        if (students[i].id == id) return i;
+    return -1;
+}
+
+/* asks for a student ID and returns that student's position (or -1) */
+int askStudent() {
+    int id, i;
+    printf("Enter student ID: ");
+    scanf("%d", &id);
+    i = findStudent(id);
+    if (i == -1) printf("Student not found!\n");
+    return i;
+}
+
+/* ---------- 1. student registration ---------- */
+void registerStudent() {
+    struct Student s;
+    if (studentCount == MAX_STUDENTS) { printf("Student list is full!\n"); return; }
+    printf("Enter student ID: ");
+    scanf("%d", &s.id);
+    if (findStudent(s.id) != -1) { printf("This ID already exists!\n"); return; }
+    printf("Name: ");
+    scanf(" %49[^\n]", s.name);
+    printf("Phone: ");
+    scanf("%14s", s.phone);
+    s.room = 0;
+    s.checkedIn = 0;
+    s.paid = 0;
+    students[studentCount] = s;        /* copy the filled form into the register */
+    studentCount++;
+    printf("Student registered successfully!\n");
+}
+
+/* ---------- 2. rooms ---------- */
+void showVacancy() {
+    int r, totalBeds = 0, usedBeds = 0;
+    for (r = 1; r <= ROOMS; r++) {
+        printf("Room %d : %d/%d occupied\n", r, occupied[r], capacity[r]);
+        totalBeds += capacity[r];
+        usedBeds += occupied[r];
+    }
+    printf("Available beds: %d of %d\n", totalBeds - usedBeds, totalBeds);
+}
+
+void allocateRoom() {
+    int s, r;
+    s = askStudent();
+    if (s == -1) return;
+    if (students[s].room != 0) { printf("Student already has a room!\n"); return; }
+    showVacancy();
+    printf("Enter room number: ");
+    scanf("%d", &r);
+    if (r < 1 || r > ROOMS)              printf("No such room!\n");
+    else if (occupied[r] == capacity[r]) printf("Room is FULL!\n");
+    else {
+        students[s].room = r;
+        occupied[r]++;
+        printf("Room %d allocated to %s.\n", r, students[s].name);
+    }
+}
+
+/* ---------- 3. fee ---------- */
+void payFee() {
+    int s, amount, balance;
+    s = askStudent();
+    if (s == -1) return;
+    balance = FEE - students[s].paid;
+    printf("Total: Rs.%d | Paid: Rs.%d | Balance: Rs.%d\n", FEE, students[s].paid, balance);
+    if (balance == 0) { printf("No pending fee.\n"); return; }
+    printf("Enter amount to pay: ");
+    scanf("%d", &amount);
+    if (amount <= 0 || amount > balance) printf("Invalid amount!\n");
+    else {
+        students[s].paid += amount;
+        printf("Payment successful! Balance now: Rs.%d\n", balance - amount);
+    }
+}
+
+/* ---------- 4. complaints ---------- */
+void addComplaint() {
+    struct Complaint c;
+    int s;
+    if (complaintCount == MAX_COMPLAINTS) { printf("Complaint list is full!\n"); return; }
+    s = askStudent();
+    if (s == -1) return;
+    c.studentId = students[s].id;
+    c.resolved = 0;
+    printf("Enter complaint: ");
+    scanf(" %99[^\n]", c.text);
+    complaints[complaintCount] = c;
+    complaintCount++;
+    printf("Complaint registered! Complaint number: %d\n", complaintCount);
+}
+
+void showComplaints() {
+    int i;
+    if (complaintCount == 0) printf("No complaints.\n");
+    for (i = 0; i < complaintCount; i++)
+        printf("%d. Student %d - %s [%s]\n", i + 1, complaints[i].studentId,
+               complaints[i].text, complaints[i].resolved ? "Resolved" : "Pending");
+}
+
+void resolveComplaint() {
+    int n;
+    printf("Enter complaint number: ");
+    scanf("%d", &n);
+    if (n < 1 || n > complaintCount) { printf("Complaint not found!\n"); return; }
+    complaints[n - 1].resolved = 1;
+    printf("Complaint marked as resolved.\n");
+}
+
+/* ---------- 5. check-in / check-out ---------- */
+void checkIn() {
+    int s;
+    s = askStudent();
+    if (s == -1) return;
+    if (students[s].room == 0)           printf("Allocate a room first!\n");
+    else if (students[s].checkedIn == 1) printf("Already checked in!\n");
+    else {
+        students[s].checkedIn = 1;
+        printf("%s checked in to room %d.\n", students[s].name, students[s].room);
+    }
+}
+
+void checkOut() {
+    int s, r;
+    s = askStudent();
+    if (s == -1) return;
+    if (students[s].checkedIn == 0) { printf("Student is not checked in!\n"); return; }
+    r = students[s].room;
+    occupied[r]--;
+    students[s].room = 0;
+    students[s].checkedIn = 0;
+    printf("%s checked out. Room %d is now available.\n", students[s].name, r);
+    if (students[s].paid < FEE) printf("Note: fee balance is still pending!\n");
+}
+
+/* ---------- 6. search and display ---------- */
+void searchStudent() {
+    int s;
+    s = askStudent();
+    if (s == -1) return;
+    printf("\nID: %d\nName: %s\nPhone: %s\n", students[s].id, students[s].name, students[s].phone);
+    printf("Room: %d\nChecked in: %s\n", students[s].room, students[s].checkedIn ? "Yes" : "No");
+    printf("Fee balance: Rs.%d\n", FEE - students[s].paid);
+}
+
+void displayAll() {
+    int i;
+    if (studentCount == 0) { printf("No students registered.\n"); return; }
+    printf("\n%-6s %-20s %-12s %-5s %s\n", "ID", "Name", "Phone", "Room", "Balance");
+    for (i = 0; i < studentCount; i++)
+        printf("%-6d %-20s %-12s %-5d Rs.%d\n", students[i].id, students[i].name,
+               students[i].phone, students[i].room, FEE - students[i].paid);
+}
+
+/* ---------- main menu ---------- */
+int main() {
+    int choice;
+    do {
+        printf("\n===== HOSTEL MANAGEMENT SYSTEM =====\n");
+        printf("1. Register Student\n2. Allocate Room\n3. Room Vacancy\n");
+        printf("4. Pay Fee\n5. Register Complaint\n6. View Complaints\n");
+        printf("7. Resolve Complaint\n8. Check-in\n9. Check-out\n");
+        printf("10. Search Student\n11. Display All Students\n0. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:  registerStudent();  break;
+            case 2:  allocateRoom();     break;
+            case 3:  showVacancy();      break;
+            case 4:  payFee();           break;
+            case 5:  addComplaint();     break;
+            case 6:  showComplaints();   break;
+            case 7:  resolveComplaint(); break;
+            case 8:  checkIn();          break;
+            case 9:  checkOut();         break;
+            case 10: searchStudent();    break;
+            case 11: displayAll();       break;
+            case 0:  printf("Goodbye!\n"); break;
+            default: printf("Invalid choice!\n");
+        }
+    } while (choice != 0);
+    return 0;
+}
