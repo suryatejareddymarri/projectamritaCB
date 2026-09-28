@@ -1,9 +1,9 @@
 import re
-import streamlit as st
+import streamlit
 PAGES = [
         {
         "id" : "atlas",
-        "tilte" : "The Atlas of the Open Web",
+        "title" : "The Atlas of the Open Web",
         "domain" : "atlas.example",
         "text" : "A field guide to hyperlinks ,browsers ,protocol and the people who keep the web open and connected.",
         "links" : ["protocols", "commons", "ranking", "libraries"],
