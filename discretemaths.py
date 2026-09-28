@@ -47,7 +47,7 @@ def play_note(note):
     frequency = notes[note]
 
     # Logic gate operation
-    play = 1
+    play = 1#permission to play sound
     note_selected = 1
 
     output = AND_gate(play, note_selected)
