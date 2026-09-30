@@ -1,5 +1,5 @@
 import re
-import streamlit
+import streamlit as st
 PAGES = [
         {
         "id" : "atlas",
